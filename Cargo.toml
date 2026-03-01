@@ -7,3 +7,9 @@ edition = "2024"
 candle-core = "0.9"
 candle-nn = "0.9"
 anyhow = "1"
+eframe = "0.33"
+egui_plot = "0.34"
+
+[[bin]]
+name = "gui"
+path = "src/bin/gui/main.rs"
