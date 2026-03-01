@@ -57,13 +57,7 @@ fn main() -> anyhow::Result<()> {
     // Use vb.pp("name") to namespace each layer's parameters.
     // Store Activation::Gelu as the activation.
     //
-    // Hint:
-    //   fn new(vb: VarBuilder) -> anyhow::Result<Self> {
-    //       let layer1 = linear(1, 32, vb.pp("layer1"))?;
-    //       let layer2 = linear(32, 32, vb.pp("layer2"))?;
-    //       let layer3 = linear(32, 1, vb.pp("layer3"))?;
-    //       Ok(Self { layer1, layer2, layer3, activation: Activation::Gelu })
-    //   }
+    // Hint: Same pattern as Exercise 4, but with three layers and a stored activation. See hints/ex05/task2.md if stuck.
     // -------------------------------------------------------
     impl SineNet {
         fn new(vb: VarBuilder) -> anyhow::Result<Self> {
@@ -76,12 +70,7 @@ fn main() -> anyhow::Result<()> {
     //
     // layer1 -> activation -> layer2 -> activation -> layer3
     //
-    // Hint:
-    //   let x = self.layer1.forward(xs)?;
-    //   let x = x.apply(&self.activation)?;
-    //   let x = self.layer2.forward(&x)?;
-    //   let x = x.apply(&self.activation)?;
-    //   self.layer3.forward(&x)
+    // Hint: Alternate between layers and activations. See hints/ex05/task3.md if stuck.
     // -------------------------------------------------------
     impl Module for SineNet {
         fn forward(&self, xs: &Tensor) -> candle_core::Result<Tensor> {
@@ -97,6 +86,7 @@ fn main() -> anyhow::Result<()> {
 
     // --- Training loop ---
     let epochs = 2000;
+    let mut loss_history: Vec<f32> = Vec::new();
 
     for epoch in 0..epochs {
         // ---------------------------------------------------
@@ -106,34 +96,40 @@ fn main() -> anyhow::Result<()> {
         // 2. MSE loss: mean((pred - y_train)^2)
         // 3. optimizer.backward_step(&loss)
         //
-        // Hint:
-        //   let pred = model.forward(&x_train)?;
-        //   let loss = (&pred - &y_train)?.sqr()?.mean_all()?;
-        //   optimizer.backward_step(&loss)?;
+        // Hint: Same training loop pattern, but use MSE loss for regression. See hints/ex05/task4.md if stuck.
         // ---------------------------------------------------
         todo!("Forward pass, MSE loss, and optimizer step");
 
         // Remove this once Task 4 is filled in:
         let loss = Tensor::zeros((), DType::F32, device)?;
 
+        let loss_val: f32 = loss.to_scalar()?;
+        loss_history.push(loss_val);
+
         if epoch % 500 == 0 || epoch == epochs - 1 {
-            let loss_val: f32 = loss.to_scalar()?;
             println!("  epoch {epoch:>5}  loss={loss_val:.6}");
         }
     }
 
-    // --- Evaluation table ---
+    // --- Evaluation table (expanded with boundary values) ---
     println!("\n--- Prediction vs Ground Truth ---");
-    println!("  {:>8} {:>10} {:>10}", "x", "sin(x)", "predicted");
-    println!("  {}", "-".repeat(32));
+    println!("  {:>8} {:>10} {:>10} {:>10}", "x", "sin(x)", "predicted", "error");
+    println!("  {}", "-".repeat(42));
 
-    let test_xs: Vec<f32> = vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0];
+    let test_xs: Vec<f32> = vec![
+        -PI, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, PI,
+    ];
+    let mut max_abs_error: f32 = 0.0;
     for &xv in &test_xs {
         let input = Tensor::new(&[xv], device)?.reshape((1, 1))?;
         let pred: f32 = model.forward(&input)?.flatten_all()?.to_vec1::<f32>()?[0];
         let truth = xv.sin();
-        println!("  {xv:>8.2} {truth:>10.4} {pred:>10.4}");
+        let err = (pred - truth).abs();
+        max_abs_error = max_abs_error.max(err);
+        println!("  {xv:>8.4} {truth:>10.4} {pred:>10.4} {err:>10.4}");
     }
+
+    println!("\n  Max absolute error: {max_abs_error:.6}");
 
     // --- Check final loss ---
     let final_pred = model.forward(&x_train)?;
@@ -142,11 +138,21 @@ fn main() -> anyhow::Result<()> {
         .mean_all()?
         .to_scalar()?;
 
-    println!("\n  Final MSE loss: {final_loss:.6}");
+    println!("  Final MSE loss:    {final_loss:.6}");
     assert!(
         final_loss < 0.05,
         "Final loss should be < 0.05, got {final_loss}"
     );
+
+    // --- Loss summary ---
+    let initial_loss = loss_history.first().copied().unwrap_or(0.0);
+    let min_loss = loss_history.iter().cloned().fold(f32::INFINITY, f32::min);
+    let is_monotonic = loss_history.windows(2).all(|w| w[1] <= w[0] + 1e-6);
+    println!("\n--- Loss Summary ---");
+    println!("  Initial loss: {initial_loss:.6}");
+    println!("  Final loss:   {final_loss:.6}");
+    println!("  Min loss:     {min_loss:.6}");
+    println!("  Monotonic:    {} (perfectly decreasing)", if is_monotonic { "yes" } else { "no" });
 
     println!("\n🎉 Exercise 5 passed! Your network learned to approximate sin(x).");
     Ok(())

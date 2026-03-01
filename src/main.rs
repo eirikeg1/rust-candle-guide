@@ -7,7 +7,9 @@ fn main() {
     println!("  cargo run --bin ex03_linear_regression");
     println!("  cargo run --bin ex04_classification");
     println!("  cargo run --bin ex05_custom_model");
+    println!("  cargo run --bin ex06_iris");
     println!();
     println!("Each exercise has todo!() placeholders for you to fill in.");
     println!("See CANDLE_GUIDE.md for a quick reference.");
+    println!("See docs/ for concept explanations behind each exercise.");
 }

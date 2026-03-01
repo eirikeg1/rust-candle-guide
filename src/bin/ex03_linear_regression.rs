@@ -39,9 +39,7 @@ fn main() -> anyhow::Result<()> {
     // Create a weight Var initialized to 0.0 (shape [1, 1])
     // and a bias Var initialized to 0.0 (shape [1]).
     //
-    // Hint:
-    //   let weight = Var::from_tensor(&Tensor::zeros((1, 1), DType::F32, device)?)?;
-    //   let bias = Var::from_tensor(&Tensor::zeros((1,), DType::F32, device)?)?;
+    // Hint: Var wraps a tensor to track gradients. See hints/ex03/task1.md if stuck.
     // -------------------------------------------------------
     let weight: Var = todo!("Create trainable weight Var, shape (1, 1), init 0.0");
     let bias: Var = todo!("Create trainable bias Var, shape (1,), init 0.0");
@@ -56,8 +54,7 @@ fn main() -> anyhow::Result<()> {
         //
         // Compute prediction = x @ weight + bias
         //
-        // Hint:
-        //   let pred = x.matmul(weight.as_tensor())?.broadcast_add(bias.as_tensor())?;
+        // Hint: Combine matrix multiplication and addition. See hints/ex03/task2.md if stuck.
         // ---------------------------------------------------
         let pred: Tensor = todo!("Forward pass: x @ weight + bias");
 
@@ -66,9 +63,7 @@ fn main() -> anyhow::Result<()> {
         //
         // loss = mean((pred - y)^2)
         //
-        // Hint:
-        //   let diff = (&pred - &y)?;
-        //   let loss = diff.sqr()?.mean_all()?;
+        // Hint: Subtract, square, average — the standard MSE formula. See hints/ex03/task3.md if stuck.
         // ---------------------------------------------------
         let loss: Tensor = todo!("MSE loss: mean of squared differences");
 
@@ -79,12 +74,7 @@ fn main() -> anyhow::Result<()> {
         // 2. Get the gradient for weight and bias from the GradStore.
         // 3. Update the Vars using set() with: param - lr * grad
         //
-        // Hint:
-        //   let grads = loss.backward()?;
-        //   let w_grad = grads.get(weight.as_tensor())?;
-        //   let b_grad = grads.get(bias.as_tensor())?;
-        //   weight.set(&(weight.as_tensor() - (w_grad * learning_rate)?)?)?;
-        //   bias.set(&(bias.as_tensor() - (b_grad * learning_rate)?)?)?;
+        // Hint: Three steps: get gradients, extract them, update parameters. See hints/ex03/task4.md if stuck.
         // ---------------------------------------------------
         todo!("Backward pass: compute gradients and update weight & bias");
 
@@ -112,6 +102,29 @@ fn main() -> anyhow::Result<()> {
         (final_b - true_bias).abs() < 0.5,
         "Bias too far from true value: {final_b} vs {true_bias}"
     );
+
+    // --- Prediction table ---
+    println!("\n--- Prediction Table (training range) ---");
+    println!("  {:>6} {:>10} {:>10} {:>10}", "x", "true y", "predicted", "error");
+    println!("  {}", "-".repeat(40));
+    for xv in [0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0] {
+        let true_y = true_weight * xv + true_bias;
+        let pred_y = final_w * xv + final_b;
+        let err = (pred_y - true_y).abs();
+        println!("  {xv:>6.1} {true_y:>10.4} {pred_y:>10.4} {err:>10.4}");
+    }
+
+    // --- Extrapolation table ---
+    println!("\n--- Extrapolation Table (unseen x values) ---");
+    println!("  {:>6} {:>10} {:>10} {:>10}", "x", "true y", "predicted", "error");
+    println!("  {}", "-".repeat(40));
+    for xv in [-2.0f32, -1.0, 6.0, 8.0, 10.0] {
+        let true_y = true_weight * xv + true_bias;
+        let pred_y = final_w * xv + final_b;
+        let err = (pred_y - true_y).abs();
+        println!("  {xv:>6.1} {true_y:>10.4} {pred_y:>10.4} {err:>10.4}");
+    }
+    println!("  (Linear models extrapolate perfectly outside training range!)");
 
     println!("\n🎉 Exercise 3 passed! Your model learned a good approximation.");
     Ok(())

@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
     // Task 1: Create a 1D tensor from a Vec<f32>
     //
     // Create a tensor containing [1.0, 2.0, 3.0, 4.0, 5.0]
-    // Hint: Tensor::new(&[1.0f32, 2.0, 3.0, 4.0, 5.0], device)
+    // Hint: Look at Tensor's constructors for creating from data. See hints/ex01/task1.md if stuck.
     // -------------------------------------------------------
     let t1: Tensor = todo!("Create a 1D tensor from [1.0, 2.0, 3.0, 4.0, 5.0]");
 
@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
     // Create a 2×3 tensor:
     //   [[1.0, 2.0, 3.0],
     //    [4.0, 5.0, 6.0]]
-    // Hint: Tensor::new(&[[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]], device)
+    // Hint: The same constructor works for higher dimensions. See hints/ex01/task2.md if stuck.
     // -------------------------------------------------------
     let t2: Tensor = todo!("Create a 2x3 tensor from nested arrays");
 
@@ -47,7 +47,7 @@ fn main() -> anyhow::Result<()> {
     // -------------------------------------------------------
     // Task 3: Create a 3×4 zeros tensor (F32)
     //
-    // Hint: Tensor::zeros((3, 4), DType::F32, device)
+    // Hint: There's a dedicated constructor for fill values. See hints/ex01/task3.md if stuck.
     // -------------------------------------------------------
     let t3: Tensor = todo!("Create a 3x4 zeros tensor");
 
@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
     // -------------------------------------------------------
     // Task 4: Create a 2×2 ones tensor (F64)
     //
-    // Hint: Tensor::ones((2, 2), DType::F64, device)
+    // Hint: Very similar to Task 3, but check the expected dtype. See hints/ex01/task4.md if stuck.
     // -------------------------------------------------------
     let t4: Tensor = todo!("Create a 2x2 ones tensor with F64 dtype");
 
@@ -79,8 +79,7 @@ fn main() -> anyhow::Result<()> {
     // -------------------------------------------------------
     // Task 5: Create a 3×3 random tensor (normal distribution)
     //
-    // Hint: Tensor::randn(mean, std, shape, device)
-    //       e.g. Tensor::randn(0f32, 1.0, (3, 3), device)
+    // Hint: Candle has constructors for random distributions. See hints/ex01/task5.md if stuck.
     // -------------------------------------------------------
     let t5: Tensor = todo!("Create a 3x3 random normal tensor (mean=0, std=1)");
 
@@ -94,8 +93,7 @@ fn main() -> anyhow::Result<()> {
     // -------------------------------------------------------
     // Task 6: Create a 2×5 uniform random tensor
     //
-    // Hint: Tensor::rand(lo, hi, shape, device)
-    //       e.g. Tensor::rand(0f32, 1.0, (2, 5), device)
+    // Hint: There's a uniform variant of the random constructor. See hints/ex01/task6.md if stuck.
     // -------------------------------------------------------
     let t6: Tensor = todo!("Create a 2x5 uniform random tensor in [0, 1)");
 

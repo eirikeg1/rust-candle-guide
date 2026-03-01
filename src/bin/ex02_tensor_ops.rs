@@ -28,7 +28,7 @@ fn main() -> anyhow::Result<()> {
     // Task 1: Element-wise addition
     //
     // Compute a + b element-wise.
-    // Hint: (&a + &b)?
+    // Hint: Rust's operator overloading works on tensors. See hints/ex02/task1.md if stuck.
     // -------------------------------------------------------
     let add: Tensor = todo!("Compute element-wise a + b");
 
@@ -42,7 +42,7 @@ fn main() -> anyhow::Result<()> {
     // Task 2: Element-wise multiplication
     //
     // Compute a * b element-wise.
-    // Hint: (&a * &b)?
+    // Hint: Same approach as Task 1 with a different operator. See hints/ex02/task2.md if stuck.
     // -------------------------------------------------------
     let mul: Tensor = todo!("Compute element-wise a * b");
 
@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()> {
     // Task 3: Matrix multiplication
     //
     // Compute a (2×3) @ c (3×2) = result (2×2)
-    // Hint: a.matmul(&c)?
+    // Hint: There's a dedicated method for this linear algebra operation. See hints/ex02/task3.md if stuck.
     // -------------------------------------------------------
     let matmul: Tensor = todo!("Compute matrix multiplication a @ c");
 
@@ -71,7 +71,7 @@ fn main() -> anyhow::Result<()> {
     // Task 4: Reshape
     //
     // Reshape a from (2, 3) to (3, 2).
-    // Hint: a.reshape((3, 2))?
+    // Hint: Look for a method that changes shape without changing data. See hints/ex02/task4.md if stuck.
     // -------------------------------------------------------
     let reshaped: Tensor = todo!("Reshape a from (2,3) to (3,2)");
 
@@ -87,7 +87,7 @@ fn main() -> anyhow::Result<()> {
     // Task 5: Slicing — extract first row
     //
     // Extract row 0 from a → [1, 2, 3]
-    // Hint: a.i(0)?
+    // Hint: Candle has an indexing method for extracting sub-tensors. See hints/ex02/task5.md if stuck.
     // -------------------------------------------------------
     let row: Tensor = todo!("Extract the first row of a");
 
@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
     // Task 6: Slicing — extract a column
     //
     // Extract column 1 from a → [2, 5]
-    // Hint: a.i((.., 1))?
+    // Hint: Same method as Task 5, but you need to select across two dimensions. See hints/ex02/task6.md if stuck.
     // -------------------------------------------------------
     let col: Tensor = todo!("Extract column 1 from a");
 
@@ -117,8 +117,7 @@ fn main() -> anyhow::Result<()> {
     // (a) Compute the mean of ALL elements in a.
     // (b) Compute the sum along dimension 1 (sum each row).
     //
-    // Hint (a): a.mean_all()?
-    // Hint (b): a.sum(1)?          — sum over columns for each row
+    // Hint: Look for reduction methods on Tensor. See hints/ex02/task7.md if stuck.
     // -------------------------------------------------------
     let mean: Tensor = todo!("Compute mean of all elements in a");
     let row_sums: Tensor = todo!("Compute sum of each row in a (along dim 1)");
@@ -135,7 +134,7 @@ fn main() -> anyhow::Result<()> {
     // Task 8: Concatenation
     //
     // Stack a and b along dimension 0 to get a (4, 3) tensor.
-    // Hint: Tensor::cat(&[&a, &b], 0)?
+    // Hint: There's a static method for joining tensors. See hints/ex02/task8.md if stuck.
     // -------------------------------------------------------
     let stacked: Tensor = todo!("Concatenate a and b along dim 0");
 
