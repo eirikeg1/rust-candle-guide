@@ -1,6 +1,4 @@
-#[allow(unused_imports)]
 use candle_core::{DType, Device, Module, Tensor};
-#[allow(unused_imports)]
 use candle_nn::{linear, loss, Linear, Optimizer, VarBuilder, VarMap};
 
 use crate::datasets::iris;
@@ -8,7 +6,6 @@ use crate::helpers;
 
 use super::{Ex06Result, ExerciseResult, TrainingMetrics, TrainingUpdate, UpdateSender};
 
-#[allow(dead_code)]
 struct IrisNet {
     layer1: Linear,
     layer2: Linear,
@@ -16,25 +13,34 @@ struct IrisNet {
 }
 
 impl IrisNet {
-    fn new(_vb: VarBuilder) -> anyhow::Result<Self> {
-        todo!("Create IrisNet with 3 linear layers: 4→16→16→3")
+    fn new(vb: VarBuilder) -> anyhow::Result<Self> {
+        let layer1 = linear(4, 16, vb.pp("layer1"))?;
+        let layer2 = linear(16, 16, vb.pp("layer2"))?;
+        let layer3 = linear(16, 3, vb.pp("layer3"))?;
+        Ok(Self {
+            layer1,
+            layer2,
+            layer3,
+        })
     }
 }
 
 impl Module for IrisNet {
-    fn forward(&self, _xs: &Tensor) -> candle_core::Result<Tensor> {
-        todo!("Forward pass: layer1 → relu → layer2 → relu → layer3")
+    fn forward(&self, xs: &Tensor) -> candle_core::Result<Tensor> {
+        let h = self.layer1.forward(xs)?;
+        let h = h.relu()?;
+        let h = self.layer2.forward(&h)?;
+        let h = h.relu()?;
+        self.layer3.forward(&h)
     }
 }
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
 
     let log = |msg: &str| {
-        match &tx {
-            Some(tx) => { let _ = tx.send(TrainingUpdate::Log(msg.to_string())); }
-            None => println!("{msg}"),
+        if let Some(tx) = &tx {
+            let _ = tx.send(TrainingUpdate::Log(msg.to_string()));
         }
     };
 
@@ -55,11 +61,9 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let mut test_accuracy_history = Vec::new();
 
     for epoch in 0..epochs {
-        // Training step: forward pass, cross-entropy loss, optimizer step
-        todo!("Forward pass, cross-entropy loss, and optimizer step");
-
-        // Dummy loss for code below to compile — remove when implementing
-        let train_loss = Tensor::zeros((), DType::F32, device)?;
+        let logits = model.forward(&x_train)?;
+        let train_loss = loss::cross_entropy(&logits, &y_train)?;
+        optimizer.backward_step(&train_loss)?;
 
         let loss_val: f32 = train_loss.to_scalar()?;
         let train_acc = helpers::accuracy(&model.forward(&x_train)?, &y_train)?;

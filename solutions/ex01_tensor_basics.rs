@@ -1,23 +1,20 @@
-#[allow(unused_imports)]
 use candle_core::{DType, Device, Tensor};
 
 use super::{Ex01Result, ExerciseResult, TensorInfo, TrainingUpdate, UpdateSender};
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
     let mut tasks = Vec::new();
 
     let log = |msg: &str| {
-        match &tx {
-            Some(tx) => { let _ = tx.send(TrainingUpdate::Log(msg.to_string())); }
-            None => println!("{msg}"),
+        if let Some(tx) = &tx {
+            let _ = tx.send(TrainingUpdate::Log(msg.to_string()));
         }
     };
 
     // Task 1: 1D tensor from data
     log("Task 1: Creating 1D tensor from [1.0, 2.0, 3.0, 4.0, 5.0]");
-    let t1: Tensor = todo!("Create a 1D tensor from [1.0, 2.0, 3.0, 4.0, 5.0]");
+    let t1 = Tensor::new(&[1.0f32, 2.0, 3.0, 4.0, 5.0], device)?;
     tasks.push(TensorInfo {
         name: "Task 1: 1D from Vec".into(),
         value: format!("{t1}"),
@@ -28,7 +25,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 2: 2D tensor
     log("Task 2: Creating 2x3 tensor");
-    let t2: Tensor = todo!("Create a 2x3 tensor from [[1, 2, 3], [4, 5, 6]]");
+    let t2 = Tensor::new(&[[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]], device)?;
     tasks.push(TensorInfo {
         name: "Task 2: 2D nested".into(),
         value: format!("{t2}"),
@@ -39,7 +36,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 3: Zeros
     log("Task 3: Creating 3x4 zeros tensor (F32)");
-    let t3: Tensor = todo!("Create a 3x4 zeros tensor (F32)");
+    let t3 = Tensor::zeros((3, 4), DType::F32, device)?;
     tasks.push(TensorInfo {
         name: "Task 3: Zeros 3x4".into(),
         value: format!("{t3}"),
@@ -50,7 +47,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 4: Ones F64
     log("Task 4: Creating 2x2 ones tensor (F64)");
-    let t4: Tensor = todo!("Create a 2x2 ones tensor (F64)");
+    let t4 = Tensor::ones((2, 2), DType::F64, device)?;
     tasks.push(TensorInfo {
         name: "Task 4: Ones 2x2 F64".into(),
         value: format!("{t4}"),
@@ -61,7 +58,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 5: Random normal
     log("Task 5: Creating 3x3 random normal tensor");
-    let t5: Tensor = todo!("Create a 3x3 random normal tensor (mean=0, std=1)");
+    let t5 = Tensor::randn(0f32, 1.0, (3, 3), device)?;
     tasks.push(TensorInfo {
         name: "Task 5: Randn 3x3".into(),
         value: format!("{t5}"),
@@ -72,7 +69,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 6: Random uniform
     log("Task 6: Creating 2x5 uniform random tensor");
-    let t6: Tensor = todo!("Create a 2x5 uniform random tensor in [0, 1)");
+    let t6 = Tensor::rand(0f32, 1.0, (2, 5), device)?;
     tasks.push(TensorInfo {
         name: "Task 6: Rand 2x5".into(),
         value: format!("{t6}"),

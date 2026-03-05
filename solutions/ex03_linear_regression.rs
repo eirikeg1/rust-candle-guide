@@ -2,7 +2,6 @@ use candle_core::{Device, Tensor, Var};
 
 use super::{Ex03Result, ExerciseResult, TrainingMetrics, TrainingUpdate, UpdateSender};
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
 
@@ -36,34 +35,29 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let learning_rate = 0.01f64;
     let epochs = 200;
 
-    // Task 1: Create trainable parameters
-    // Create a `Var` for the weight (shape [1, 1]) and bias (shape [1]),
-    // both initialized to zero. Use `Var::new()` with f32 values.
-    let weight: Var = todo!("Create weight Var with shape [1, 1], initialized to 0.0");
-    let bias: Var = todo!("Create bias Var with shape [1], initialized to 0.0");
+    // Trainable parameters
+    let weight = Var::new(&[[0.0f32]], device)?;
+    let bias = Var::new(&[0.0f32], device)?;
 
     let mut loss_history = Vec::new();
     let mut weight_history = Vec::new();
     let mut bias_history = Vec::new();
 
     for epoch in 0..epochs {
-        // Task 2: Forward pass
-        // Compute predictions: pred = x @ weight + bias
-        // Use x.matmul() for matrix multiplication, and .broadcast_add() for the bias.
-        // Access the underlying tensor of a Var with .as_tensor().
-        let pred: Tensor = todo!("Compute pred = x @ weight + bias");
+        // Forward: pred = x @ weight + bias
+        let pred = x.matmul(weight.as_tensor())?.broadcast_add(bias.as_tensor())?;
 
-        // Task 3: MSE loss
-        // Compute mean squared error: loss = mean((pred - y)^2)
-        // Use subtraction, .sqr(), and .mean_all().
-        let loss: Tensor = todo!("Compute MSE loss");
+        // MSE loss
+        let diff = (&pred - &y)?;
+        let loss = diff.sqr()?.mean_all()?;
 
-        // Task 4: Backward pass and parameter update
-        // 1. Call loss.backward() to get gradients
-        // 2. Get gradients for weight and bias using grads.get()
-        // 3. Update each parameter: param = param - learning_rate * gradient
-        //    Use var.set() to write the new value back.
-        todo!("Backward pass and manual gradient descent update");
+        // Backward + update
+        let grads = loss.backward()?;
+        let grad_w = grads.get(weight.as_tensor()).unwrap();
+        let grad_b = grads.get(bias.as_tensor()).unwrap();
+
+        weight.set(&(weight.as_tensor() - (grad_w * learning_rate)?)?)?;
+        bias.set(&(bias.as_tensor() - (grad_b * learning_rate)?)?)?;
 
         let loss_val: f32 = loss.to_scalar()?;
         let w: f32 = weight.as_tensor().flatten_all()?.to_vec1::<f32>()?[0];

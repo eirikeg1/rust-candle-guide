@@ -1,36 +1,35 @@
-#[allow(unused_imports)]
 use candle_core::{DType, Device, Module, Tensor};
-#[allow(unused_imports)]
 use candle_nn::{linear, loss, Linear, Optimizer, VarBuilder, VarMap};
 
 use super::{Ex04Result, ExerciseResult, TrainingMetrics, TrainingUpdate, UpdateSender};
 
-#[allow(dead_code)]
 struct Mlp {
     layer1: Linear,
     layer2: Linear,
 }
 
 impl Mlp {
-    fn new(_vb: VarBuilder) -> anyhow::Result<Self> {
-        todo!("Create the two linear layers: 2→16 and 16→2")
+    fn new(vb: VarBuilder) -> anyhow::Result<Self> {
+        let layer1 = linear(2, 16, vb.pp("layer1"))?;
+        let layer2 = linear(16, 2, vb.pp("layer2"))?;
+        Ok(Self { layer1, layer2 })
     }
 }
 
 impl Module for Mlp {
-    fn forward(&self, _xs: &Tensor) -> candle_core::Result<Tensor> {
-        todo!("Forward pass: layer1 → relu → layer2")
+    fn forward(&self, xs: &Tensor) -> candle_core::Result<Tensor> {
+        let h = self.layer1.forward(xs)?;
+        let h = h.relu()?;
+        self.layer2.forward(&h)
     }
 }
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
 
     let log = |msg: &str| {
-        match &tx {
-            Some(tx) => { let _ = tx.send(TrainingUpdate::Log(msg.to_string())); }
-            None => println!("{msg}"),
+        if let Some(tx) = &tx {
+            let _ = tx.send(TrainingUpdate::Log(msg.to_string()));
         }
     };
 
@@ -76,14 +75,12 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let mut accuracy_history = Vec::new();
 
     for epoch in 0..epochs {
-        // Training step: forward pass, cross-entropy loss, optimizer step
-        todo!("Forward pass, cross-entropy loss, and optimizer step");
-
-        // Dummy loss for code below to compile — remove when implementing
-        let train_loss = Tensor::zeros((), DType::F32, device)?;
+        let logits = model.forward(&x_train)?;
+        let train_loss = loss::cross_entropy(&logits, &y_train)?;
+        optimizer.backward_step(&train_loss)?;
 
         let loss_val: f32 = train_loss.to_scalar()?;
-        let preds = model.forward(&x_train)?.argmax(1)?;
+        let preds = logits.argmax(1)?;
         let correct: u32 = preds
             .to_vec1::<u32>()?
             .iter()

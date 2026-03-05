@@ -2,15 +2,13 @@ use candle_core::{Device, Tensor};
 
 use super::{Ex02Result, ExerciseResult, OpResult, TrainingUpdate, UpdateSender};
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
     let mut ops = Vec::new();
 
     let log = |msg: &str| {
-        match &tx {
-            Some(tx) => { let _ = tx.send(TrainingUpdate::Log(msg.to_string())); }
-            None => println!("{msg}"),
+        if let Some(tx) = &tx {
+            let _ = tx.send(TrainingUpdate::Log(msg.to_string()));
         }
     };
 
@@ -20,7 +18,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 1: Element-wise addition
     log("Task 1: Element-wise addition a + b");
-    let add: Tensor = todo!("Compute element-wise a + b");
+    let add = (&a + &b)?;
     ops.push(OpResult {
         name: "Task 1: a + b".into(),
         input_desc: "a(2x3) + b(2x3)".into(),
@@ -31,7 +29,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 2: Element-wise multiplication
     log("Task 2: Element-wise multiplication a * b");
-    let mul: Tensor = todo!("Compute element-wise a * b");
+    let mul = (&a * &b)?;
     ops.push(OpResult {
         name: "Task 2: a * b".into(),
         input_desc: "a(2x3) * b(2x3)".into(),
@@ -42,7 +40,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 3: Matrix multiplication
     log("Task 3: Matrix multiplication a @ c");
-    let matmul: Tensor = todo!("Compute matrix multiplication a @ c");
+    let matmul = a.matmul(&c)?;
     ops.push(OpResult {
         name: "Task 3: a @ c".into(),
         input_desc: "a(2x3) @ c(3x2)".into(),
@@ -53,7 +51,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 4: Reshape
     log("Task 4: Reshape a from (2,3) to (3,2)");
-    let reshaped: Tensor = todo!("Reshape a from (2,3) to (3,2)");
+    let reshaped = a.reshape((3, 2))?;
     ops.push(OpResult {
         name: "Task 4: Reshape".into(),
         input_desc: "a(2,3) -> (3,2)".into(),
@@ -64,7 +62,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 5: Row slicing
     log("Task 5: Extract first row of a");
-    let row: Tensor = todo!("Extract the first row of a");
+    let row = a.get(0)?;
     ops.push(OpResult {
         name: "Task 5: Row slice".into(),
         input_desc: "a[0]".into(),
@@ -75,7 +73,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 6: Column slicing
     log("Task 6: Extract column 1 of a");
-    let col: Tensor = todo!("Extract column 1 from a");
+    let col = a.narrow(1, 1, 1)?.squeeze(1)?;
     ops.push(OpResult {
         name: "Task 6: Column slice".into(),
         input_desc: "a[:, 1]".into(),
@@ -86,7 +84,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 7: Reductions
     log("Task 7a: Mean of all elements in a");
-    let mean: Tensor = todo!("Compute mean of all elements in a");
+    let mean = a.mean_all()?;
     let mean_val: f32 = mean.to_scalar()?;
     ops.push(OpResult {
         name: "Task 7a: Mean all".into(),
@@ -96,7 +94,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     });
 
     log("Task 7b: Row sums of a");
-    let row_sums: Tensor = todo!("Compute sum of each row in a (along dim 1)");
+    let row_sums = a.sum(1)?;
     ops.push(OpResult {
         name: "Task 7b: Row sums".into(),
         input_desc: "sum(a, dim=1)".into(),
@@ -107,7 +105,7 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
 
     // Task 8: Concatenation
     log("Task 8: Concatenate a and b along dim 0");
-    let stacked: Tensor = todo!("Concatenate a and b along dim 0");
+    let stacked = Tensor::cat(&[&a, &b], 0)?;
     ops.push(OpResult {
         name: "Task 8: Cat dim 0".into(),
         input_desc: "cat([a, b], 0)".into(),

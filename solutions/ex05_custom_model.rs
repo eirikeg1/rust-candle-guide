@@ -1,13 +1,10 @@
 use std::f32::consts::PI;
 
-#[allow(unused_imports)]
 use candle_core::{DType, Device, Module, Tensor};
-#[allow(unused_imports)]
 use candle_nn::{linear, Activation, Linear, Optimizer, VarBuilder, VarMap};
 
 use super::{Ex05Result, ExerciseResult, TrainingMetrics, TrainingUpdate, UpdateSender};
 
-#[allow(dead_code)]
 struct SineNet {
     layer1: Linear,
     layer2: Linear,
@@ -16,25 +13,35 @@ struct SineNet {
 }
 
 impl SineNet {
-    fn new(_vb: VarBuilder) -> anyhow::Result<Self> {
-        todo!("Create SineNet with 3 linear layers (1→32→32→1) and Gelu activation")
+    fn new(vb: VarBuilder) -> anyhow::Result<Self> {
+        let layer1 = linear(1, 32, vb.pp("layer1"))?;
+        let layer2 = linear(32, 32, vb.pp("layer2"))?;
+        let layer3 = linear(32, 1, vb.pp("layer3"))?;
+        Ok(Self {
+            layer1,
+            layer2,
+            layer3,
+            activation: Activation::Gelu,
+        })
     }
 }
 
 impl Module for SineNet {
-    fn forward(&self, _xs: &Tensor) -> candle_core::Result<Tensor> {
-        todo!("Forward pass: layer1 → activation → layer2 → activation → layer3")
+    fn forward(&self, xs: &Tensor) -> candle_core::Result<Tensor> {
+        let h = self.layer1.forward(xs)?;
+        let h = self.activation.forward(&h)?;
+        let h = self.layer2.forward(&h)?;
+        let h = self.activation.forward(&h)?;
+        self.layer3.forward(&h)
     }
 }
 
-#[allow(unreachable_code, unused_variables, unused_mut)]
 pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let device = &Device::Cpu;
 
     let log = |msg: &str| {
-        match &tx {
-            Some(tx) => { let _ = tx.send(TrainingUpdate::Log(msg.to_string())); }
-            None => println!("{msg}"),
+        if let Some(tx) = &tx {
+            let _ = tx.send(TrainingUpdate::Log(msg.to_string()));
         }
     };
 
@@ -65,13 +72,11 @@ pub fn run(tx: Option<UpdateSender>) -> anyhow::Result<ExerciseResult> {
     let mut loss_history = Vec::new();
 
     for epoch in 0..epochs {
-        // Training step: forward pass, MSE loss, optimizer step
-        todo!("Forward pass, MSE loss, and optimizer step");
+        let pred = model.forward(&x_train)?;
+        let loss = (&pred - &y_train)?.sqr()?.mean_all()?;
+        optimizer.backward_step(&loss)?;
 
-        // Dummy loss for code below to compile — remove when implementing
-        let train_loss = Tensor::zeros((), DType::F32, device)?;
-
-        let loss_val: f32 = train_loss.to_scalar()?;
+        let loss_val: f32 = loss.to_scalar()?;
         loss_history.push(loss_val);
 
         if let Some(tx) = &tx {

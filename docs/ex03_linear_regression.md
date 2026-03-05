@@ -1,5 +1,62 @@
 # Linear Regression: Your First ML Model
 
+## Bridging from Tensors to Training: Autodiff Primer
+
+In Exercise 2, you worked with regular `Tensor` values — fixed data that you
+manipulated with arithmetic and reshaping. Training a model requires something
+new: **parameters that can be updated based on how wrong the model is**. This
+is where `Var` and automatic differentiation come in.
+
+### `Var` vs `Tensor`
+
+A `Var` is a `Tensor` that Candle tracks for gradient computation:
+
+```rust
+use candle_core::{Device, Tensor, Var};
+
+// Regular tensor — just data, no gradients
+let x = Tensor::new(&[1.0f32, 2.0, 3.0], &Device::Cpu)?;
+
+// Var — a trainable parameter that tracks gradients
+let w = Var::new(&[0.0f32], &Device::Cpu)?;
+```
+
+You can use a `Var` anywhere a `Tensor` is expected by calling `.as_tensor()`.
+The key difference: when you call `.backward()` on a loss computed from `Var`
+values, Candle computes the gradient of the loss with respect to each `Var`.
+
+### What does `.backward()` return?
+
+Calling `loss.backward()` returns a `GradStore` — a map from tensors to their
+gradients. You look up a specific parameter's gradient with `.get()`:
+
+```rust
+// Minimal example: compute a gradient
+let w = Var::new(&[2.0f32], &Device::Cpu)?;
+let loss = w.as_tensor().sqr()?.mean_all()?;  // loss = w^2 = 4.0
+let grads = loss.backward()?;
+let grad_w = grads.get(w.as_tensor()).unwrap();
+// grad_w = 2*w = 4.0 (the derivative of w^2)
+```
+
+This is **automatic differentiation** — Candle recorded that `loss` was computed
+by squaring `w`, so it knows the gradient is `2*w`. No matter how complex your
+forward computation is, `.backward()` computes exact gradients automatically.
+
+### From gradients to learning
+
+Once you have gradients, a single parameter update looks like:
+
+```rust
+w.set(&(w.as_tensor() - (grad_w * learning_rate)?)?)?;
+```
+
+This is gradient descent: move each parameter a small step in the direction that
+reduces the loss. Repeat this in a loop, and the model learns. That's exactly
+what you'll implement in this exercise.
+
+---
+
 ## The Model
 
 Linear regression fits a straight line to data:
